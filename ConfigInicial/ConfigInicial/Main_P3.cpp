@@ -1,3 +1,8 @@
+// Practica 3
+// Lunes 31 de agosto de 2026
+// Gutierrez Benavides Frida Regina
+// 320233454
+
 #include<iostream>
 
 //#define GLEW_STATIC
@@ -10,13 +15,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
-
 // Shaders
 #include "Shader.h"
 
 const GLint WIDTH = 800, HEIGHT = 600;
-
 
 int main() {
 	glfwInit();
@@ -54,10 +56,8 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-
 	// Define las dimensiones del viewport
 	glViewport(0, 0, screenWidth, screenHeight);
-
 
 	// Setup OpenGL options
 	glEnable(GL_DEPTH_TEST);
@@ -66,10 +66,8 @@ int main() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
 	// Build and compile our shader program
 	Shader ourShader("Shader/core.vs", "Shader/core.frag");
-
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
 	// use with Orthographic Projection
@@ -118,7 +116,6 @@ int main() {
 	//	-0.5f * 500,  0.5f * 500, -0.5f * 500, 1.0f, 0.2f,0.5f,
 	//};
 	
-
 	// use with Perspective Projection
 	float vertices[] = {
 		-0.5f, -0.5f, 0.5f, 1.0f, 0.0f,0.0f,//Front
@@ -291,9 +288,9 @@ int main() {
 		glfwSwapBuffers(window);
 	
 	}
+
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-
 
 	glfwTerminate();
 	return EXIT_SUCCESS;  
