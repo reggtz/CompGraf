@@ -19,14 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shader\core.frag" />
-    <None Include="Shader\core.vs" />
+    <None Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Shader\core.frag" />
+    <None Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Shader\core.vs" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Shader.h" />
+    <ClCompile Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Main_Modelado.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main_P3.cpp" />
+    <ClInclude Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Shader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
