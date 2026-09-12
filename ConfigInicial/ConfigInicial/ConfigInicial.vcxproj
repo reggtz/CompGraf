@@ -23,10 +23,10 @@
     <None Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Shader\core.vs" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Main_Modelado.cpp" />
+    <ClInclude Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Shader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Shader.h" />
+    <ClCompile Include="C:\Users\Frida\Downloads\ModeladoGeometrico\Main_Modelado.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
