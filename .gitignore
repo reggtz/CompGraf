@@ -399,3 +399,38 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.VC.opendb
+*.opendb
+*.ipch
+
+# Compilación C/C++
+Debug/
+Release/
+x64/
+x86/
+Win32/
+
+**/Debug/
+**/Release/
+**/x64/
+**/x86/
+**/Win32/
+
+# Archivos temporales de compilación
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.pch
+*.tlog
+*.lastbuildstate
+
+# Archivos temporales
+*.tmp
+*.log
