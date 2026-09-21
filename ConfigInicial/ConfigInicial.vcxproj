@@ -88,12 +88,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\include;D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\include;C:\Users\CGIH1\Downloads\External Libraries\GLEW\include;C:\Users\CGIH1\Downloads\External Libraries\GLFW\include;D:\GH\CompGraf\ConfigInicial\External Libraries\glm;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\GH\CompGraf\External Libraries\GLEW\include;D:\GH\CompGraf\External Libraries\GLFW\include;D:\GH\CompGraf\External Libraries\glm;D:\GH\CompGraf\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\lib-vc2015;D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\ConfigInicial\External Libraries\SOIL2\lib;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\GH\CompGraf\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\External Libraries\GLEW\lib\Release\Win32;D:\GH\CompGraf\External Libraries\SOIL2\lib;D:\GH\CompGraf\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;soil2-debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -105,12 +105,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\include;D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\include;C:\Users\CGIH1\Downloads\External Libraries\GLEW\include;C:\Users\CGIH1\Downloads\External Libraries\GLFW\include;D:\GH\CompGraf\ConfigInicial\External Libraries\glm;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\GH\CompGraf\External Libraries\GLEW\include;D:\GH\CompGraf\External Libraries\GLFW\include;D:\GH\CompGraf\External Libraries\glm;D:\GH\CompGraf\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\lib-vc2015;D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\ConfigInicial\External Libraries\SOIL2\lib;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\GH\CompGraf\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\External Libraries\GLEW\lib\Release\Win32;D:\GH\CompGraf\External Libraries\SOIL2\lib;D:\GH\CompGraf\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;soil2-debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -120,12 +120,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\include;D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\include;C:\Users\CGIH1\Downloads\External Libraries\GLEW\include;C:\Users\CGIH1\Downloads\External Libraries\GLFW\include;D:\GH\CompGraf\ConfigInicial\External Libraries\glm;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\GH\CompGraf\External Libraries\GLEW\include;D:\GH\CompGraf\External Libraries\GLFW\include;D:\GH\CompGraf\External Libraries\glm;D:\GH\CompGraf\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\lib-vc2015;D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\ConfigInicial\External Libraries\SOIL2\lib;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\GH\CompGraf\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\External Libraries\GLEW\lib\Release\Win32;D:\GH\CompGraf\External Libraries\SOIL2\lib;D:\GH\CompGraf\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;soil2-debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -137,12 +137,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\include;D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\include;C:\Users\CGIH1\Downloads\External Libraries\GLEW\include;C:\Users\CGIH1\Downloads\External Libraries\GLFW\include;D:\GH\CompGraf\ConfigInicial\External Libraries\glm;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\GH\CompGraf\External Libraries\GLEW\include;D:\GH\CompGraf\External Libraries\GLFW\include;D:\GH\CompGraf\External Libraries\glm;D:\GH\CompGraf\External Libraries\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\CGIHC\P1\ConfigInicial\External Libraries\GLFW\lib-vc2015;D:\CGIHC\P1\ConfigInicial\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLEW\lib\Release\Win32;C:\Users\CGIH1\Downloads\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\ConfigInicial\External Libraries\SOIL2\lib;D:\GH\CompGraf\ConfigInicial\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\GH\CompGraf\External Libraries\GLFW\lib-vc2015;D:\GH\CompGraf\External Libraries\GLEW\lib\Release\Win32;D:\GH\CompGraf\External Libraries\SOIL2\lib;D:\GH\CompGraf\External Libraries\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc140-mt.lib;soil2-debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
