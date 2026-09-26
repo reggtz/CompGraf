@@ -1,0 +1,32 @@
+# Blender 3.3.0 MTL File: 'roads.blend'
+# www.blender.org
+
+newmtl Road_1
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd textures/Old road 1 1k/TexturesCom_Pavement_RoadOld_White_1K_albedo.jpg
+map_Ns D:\GH\CompGraf\ConfigInicial\Models\Calle\textures\Old road 1 1k\TexturesCom_Pavement_RoadOld_1K_roughness.tif
+
+newmtl pavement_1
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd textures/concrete_wall_001_2k/textures/concrete_wall_001_diff_2k.jpg
+map_Ns D:\GH\CompGraf\ConfigInicial\Models\Calle\textures\concrete_wall_001_2k\textures\concrete_wall_001_rough_2k.jpg
+
+newmtl pavement_edge
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd textures/Concrete020_2K-PNG/Concrete020_2K_Color.png
+map_Ns D:\GH\CompGraf\ConfigInicial\Models\Calle\textures\Concrete020_2K-PNG\Concrete020_2K_Normal.png
