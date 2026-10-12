@@ -1,0 +1,424 @@
+// Gutierrez Benavides Frida Regina
+// 320233454
+// Practica 8
+// Lunes 5 de octubre de 2026
+
+// Std. Includes
+#include <string>
+
+// GLEW
+#include <GL/glew.h>
+
+// GLFW
+#include <GLFW/glfw3.h>
+
+// GL includes
+#include "Shader.h"
+#include "Camera.h"
+#include "Model.h"
+
+// GLM Mathemtics
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+// Other Libs
+#include "SOIL2/SOIL2.h"
+#include "stb_image.h"
+
+// Properties
+const GLuint WIDTH = 800, HEIGHT = 600;
+int SCREEN_WIDTH, SCREEN_HEIGHT;
+
+// Function prototypes
+void KeyCallback( GLFWwindow *window, int key, int scancode, int action, int mode );
+void MouseCallback( GLFWwindow *window, double xPos, double yPos );
+void DoMovement( );
+
+
+// Camera
+Camera camera( glm::vec3( 0.0f, 0.0f, 3.0f ) );
+bool keys[1024];
+GLfloat lastX = 400, lastY = 300;
+bool firstMouse = true;
+
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
+
+// SOL Y LUNA: P pausa o reanuda el movimiento.
+// bool animarAstros = true;
+float anguloAstros = 30.0f;     // Grados iniciales.
+float velocidadAstros = 30.0f; // Grados por segundo: una vuelta en 30 s.
+
+void DibujarModelo(
+    Model& objeto,
+    Shader& shader,
+    glm::vec3 posicion,
+    glm::vec3 rotacion,
+    glm::vec3 escala)
+{
+    glm::mat4 model(1.0f);
+
+    model = glm::translate(model, posicion);
+
+    model = glm::rotate(
+        model, glm::radians(rotacion.z),
+        glm::vec3(0.0f, 0.0f, 1.0f));
+
+    model = glm::rotate(
+        model, glm::radians(rotacion.y),
+        glm::vec3(0.0f, 1.0f, 0.0f));
+
+    model = glm::rotate(
+        model, glm::radians(rotacion.x),
+        glm::vec3(1.0f, 0.0f, 0.0f));
+
+    model = glm::scale(model, escala);
+
+    glUniformMatrix4fv(
+        glGetUniformLocation(shader.Program, "model"),
+        1, GL_FALSE, glm::value_ptr(model));
+
+    objeto.Draw(shader);
+}
+
+int main( )
+{
+    // Init GLFW
+    glfwInit( );
+    // Set all the required options for GLFW
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 3 );
+    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+    glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
+    glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
+    
+    // Create a GLFWwindow object that we can use for GLFW's functions
+    GLFWwindow *window = glfwCreateWindow( WIDTH, HEIGHT, "Carga de modelos y camara sintetica Frida Regina Gutierrez Benavides", nullptr, nullptr );
+    
+    if ( nullptr == window )
+    {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate( );
+        
+        return EXIT_FAILURE;
+    }
+    
+    glfwMakeContextCurrent( window );
+    
+    glfwGetFramebufferSize( window, &SCREEN_WIDTH, &SCREEN_HEIGHT );
+    
+    // Set the required callback functions
+    glfwSetKeyCallback( window, KeyCallback );
+    glfwSetCursorPosCallback( window, MouseCallback );
+    
+    // GLFW Options
+    //glfwSetInputMode( window, GLFW_CURSOR, GLFW_CURSOR_DISABLED );
+    
+    // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
+    glewExperimental = GL_TRUE;
+    // Initialize GLEW to setup the OpenGL Function pointers
+    if ( GLEW_OK != glewInit( ) )
+    {
+        std::cout << "Failed to initialize GLEW" << std::endl;
+        return EXIT_FAILURE;
+    }
+    
+    // Define the viewport dimensions
+    glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
+    
+    // OpenGL options
+    glEnable( GL_DEPTH_TEST );
+    
+    // Setup and compile our shaders
+    Shader shader( "Shader/escenarioDiaNoche.vs", "Shader/escenarioDiaNoche.frag" );
+    
+    // Load models
+    /* Model dog((char*)"Models/Montaña/Mountain.obj");
+    glm::mat4 projection = glm::perspective( camera.GetZoom( ), ( float )SCREEN_WIDTH/( float )SCREEN_HEIGHT, 0.1f, 100.0f );
+    */
+
+    // Cargar una sola vez, antes del while.
+    Model calle((char*)"Models/Calle/low poly roads.obj");
+    Model montana((char*)"Models/Montaña/Mountain.obj");
+    Model patineta((char*)"Models/Patineta/skateboard_by_dommk.obj");
+    Model perro((char*)"Models/Perro/12228_Dog_v1_L2.obj");
+
+    // VALORES PARA MODIFICAR
+    // Posicion: X = izquierda/derecha
+    //           Y = abajo/arriba
+    //           Z = fondo/frente
+
+    glm::vec3 posicionCalle(0.0f, -0.12f, 0.0f);
+    glm::vec3 rotacionCalle(0.0f, 90.0f, 0.0f);
+    glm::vec3 escalaCalle(1.0f);
+
+    glm::vec3 posicionMontana(0.0f, 0.0f, -20.0f);
+    glm::vec3 rotacionMontana(0.0f);
+    glm::vec3 escalaMontana(1.5f);
+
+    // La patineta viene alargada sobre Z.
+    // Giramos para que quede atravesada sobre X.
+    glm::vec3 posicionPatineta(0.0f, 0.32f, 0.0f);
+    glm::vec3 rotacionPatineta(0.0f, 90.0f, 0.0f);
+    glm::vec3 escalaPatineta(0.005f);
+
+    // Este perro viene con la altura sobre Z.
+    // Lo giramos para que quede de pie sobre Y.
+    glm::vec3 posicionPerro(0.0f, 0.35f, 0.0f);
+    glm::vec3 rotacionPerro(-90.0f, -90.0f, 0.0f);
+    glm::vec3 escalaPerro(0.055f);
+
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera.GetZoom()),
+        (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
+        0.1f,
+        200.0f
+    );
+
+    Model cielo((char*)"Models/Cielo/cielo.obj");
+
+    Model sol((char*)"Models/Sol/sol.obj");
+    Model luna((char*)"Models/Luna/luna.obj");
+
+    // Pivote invisible en el centro del escenario.
+    glm::vec3 centroOrbita(0.0f, 0.0f, -10.0f);
+    float radioOrbita = 15.0f;
+    // Ajustar cuando tengas los modelos; deben estar centrados en su origen.
+    glm::vec3 escalaSol(1.5f);
+    glm::vec3 escalaLuna(0.1f);
+
+    // Evita incluir el tiempo de carga de modelos en el primer movimiento.
+    lastFrame = (GLfloat)glfwGetTime();
+
+    // Game loop
+    while (!glfwWindowShouldClose(window))
+    {
+        GLfloat currentFrame = (GLfloat)glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        glfwPollEvents();
+        DoMovement();
+
+        // 1. Girar el pivote, como la articulacion de un brazo.
+        // Mantener O: avanzar el giro.
+        if (keys[GLFW_KEY_O])
+            anguloAstros += velocidadAstros * deltaTime;
+
+        // Mantener P: girar en sentido contrario.
+        if (keys[GLFW_KEY_P])
+            anguloAstros -= velocidadAstros * deltaTime;
+
+        // Mantener el angulo entre 0 y 360 grados.
+        while (anguloAstros >= 360.0f)
+            anguloAstros -= 360.0f;
+
+        while (anguloAstros < 0.0f)
+            anguloAstros += 360.0f;
+
+        glm::mat4 pivote(1.0f);
+        pivote = glm::translate(pivote, centroOrbita);
+        pivote = glm::rotate(pivote, glm::radians(anguloAstros),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // 2. Ambos heredan el mismo pivote y quedan en lados opuestos.
+        glm::mat4 orbitaSol = glm::translate(
+            pivote, glm::vec3(radioOrbita, 0.0f, 0.0f));
+        glm::mat4 orbitaLuna = glm::translate(
+            pivote, glm::vec3(-radioOrbita, 0.0f, 0.0f));
+
+        // Transformar el origen local para obtener la posicion mundial.
+        glm::vec3 posicionSol = glm::vec3(
+            orbitaSol * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        glm::vec3 posicionLuna = glm::vec3(
+            orbitaLuna * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        // 3. Solo ilumina el astro que esta por encima del horizonte.
+        bool solEncendido = posicionSol.y > centroOrbita.y;
+        bool lunaEncendida = posicionLuna.y > centroOrbita.y;
+
+        glm::vec3 posicionLuz = solEncendido ? posicionSol : posicionLuna;
+        glm::vec3 colorLuz(0.0f);
+        if (solEncendido)
+            colorLuz = glm::vec3(1.0f, 0.90f, 0.70f);
+        else if (lunaEncendida)
+            colorLuz = glm::vec3(0.25f, 0.35f, 0.55f);
+
+        // Fondo azul: aproxima el cielo.
+        float brilloFondo = solEncendido ? 1.0f : 0.22f;
+        glClearColor(0.35f * brilloFondo, 0.55f * brilloFondo,
+                     0.78f * brilloFondo, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        shader.Use();
+
+        // 4. Enviar la luz al shader, igual que en Iluminacion.cpp.
+        glUniform3fv(glGetUniformLocation(shader.Program, "light.position"),
+                     1, glm::value_ptr(posicionLuz));
+        glUniform3fv(glGetUniformLocation(shader.Program, "light.diffuse"),
+                     1, glm::value_ptr(colorLuz));
+        glm::vec3 ambiente = solEncendido
+            ? glm::vec3(0.25f, 0.25f, 0.25f)
+            : glm::vec3(0.12f, 0.16f, 0.24f);
+
+        glUniform3fv(glGetUniformLocation(shader.Program, "light.ambient"),
+            1, glm::value_ptr(ambiente));
+        glUniform3f(glGetUniformLocation(shader.Program, "light.specular"),
+                    0.15f, 0.15f, 0.15f);
+        glm::vec3 posicionCamara = camera.GetPosition();
+        glUniform3fv(glGetUniformLocation(shader.Program, "viewPos"),
+                     1, glm::value_ptr(posicionCamara));
+        glUniform1i(glGetUniformLocation(shader.Program, "sinIluminacion"), GL_FALSE);
+        glUniform1i(glGetUniformLocation(shader.Program, "usarTextura"), GL_TRUE);
+
+        glm::mat4 view = camera.GetViewMatrix();
+
+        glUniformMatrix4fv(
+            glGetUniformLocation(shader.Program, "projection"),
+            1, GL_FALSE, glm::value_ptr(projection));
+
+        glUniformMatrix4fv(
+            glGetUniformLocation(shader.Program, "view"),
+            1, GL_FALSE, glm::value_ptr(view));
+
+        DibujarModelo(
+            montana, shader,
+            posicionMontana, rotacionMontana, escalaMontana);
+
+        DibujarModelo(
+            calle, shader,
+            posicionCalle, rotacionCalle, escalaCalle);
+
+        DibujarModelo(
+            patineta, shader,
+            posicionPatineta, rotacionPatineta, escalaPatineta);
+
+        DibujarModelo(
+            perro, shader,
+            posicionPerro, rotacionPerro, escalaPerro);
+
+
+        // 5. Los astros se ven brillantes, sin recibir iluminacion.
+        // Color uniforme: no requieren textura para verse.
+        glUniform1i(glGetUniformLocation(shader.Program, "sinIluminacion"), GL_TRUE);
+        glUniform1i(glGetUniformLocation(shader.Program, "usarTextura"), GL_FALSE);
+        glUniform3f(glGetUniformLocation(shader.Program, "colorObjeto"),
+                    1.0f, 0.85f, 0.25f);
+        glm::mat4 modeloSol = glm::scale(orbitaSol, escalaSol);
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"),
+                           1, GL_FALSE, glm::value_ptr(modeloSol));
+        sol.Draw(shader);
+
+        glUniform3f(glGetUniformLocation(shader.Program, "colorObjeto"),
+                    0.75f, 0.82f, 1.0f);
+        glm::mat4 modeloLuna = glm::scale(orbitaLuna, escalaLuna);
+        modeloLuna = glm::translate(
+            modeloLuna,
+            -glm::vec3(12.4291f, 12.02875f, -0.6679f)
+        );
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"),
+                           1, GL_FALSE, glm::value_ptr(modeloLuna));
+        luna.Draw(shader);
+
+        // El cielo conserva su textura y se oscurece durante la noche.
+        glUniform1i(glGetUniformLocation(shader.Program, "usarTextura"), GL_TRUE);
+        float brilloCielo = solEncendido ? 1.0f : 0.22f;
+        glUniform3f(glGetUniformLocation(shader.Program, "colorObjeto"),
+                    brilloCielo, brilloCielo, brilloCielo);
+
+        // ===== DIBUJAR EL CIELO =====
+        glm::mat4 modeloCielo(1.0f);
+
+        // Posicion: detras de la montaña.
+        modeloCielo = glm::translate(
+            modeloCielo,
+            glm::vec3(0.0f, 5.0f, -45.0f)
+        );
+
+        // Tamaño del fondo. El plano ya es vertical.
+        modeloCielo = glm::scale(
+            modeloCielo,
+            glm::vec3(40.0f, 25.0f, 1.0f)
+        );
+
+        // Enviar la matriz al shader.
+        glUniformMatrix4fv(
+            glGetUniformLocation(shader.Program, "model"),
+            1,
+            GL_FALSE,
+            glm::value_ptr(modeloCielo)
+        );
+
+        // Dibujar.
+        cielo.Draw(shader);
+        // ===== FIN DEL CIELO =====
+
+        glfwSwapBuffers(window);
+    }
+    
+    glfwTerminate( );
+    return 0;
+}
+
+
+// Moves/alters the camera positions based on user input
+void DoMovement( )
+{
+    // Camera controls
+    if ( keys[GLFW_KEY_W] || keys[GLFW_KEY_UP] )
+    {
+        camera.ProcessKeyboard( FORWARD, deltaTime );
+    }
+    
+    if ( keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN] )
+    {
+        camera.ProcessKeyboard( BACKWARD, deltaTime );
+    }
+    
+    if ( keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT] )
+    {
+        camera.ProcessKeyboard( LEFT, deltaTime );
+    }
+    
+    if ( keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT] )
+    {
+        camera.ProcessKeyboard( RIGHT, deltaTime );
+    }
+
+   
+}
+
+void KeyCallback(GLFWwindow* window, int key,
+    int scancode, int action, int mode)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+
+    if (key >= 0 && key < 1024)
+    {
+        if (action == GLFW_PRESS)
+            keys[key] = true;
+        else if (action == GLFW_RELEASE)
+            keys[key] = false;
+    }
+}
+
+void MouseCallback( GLFWwindow *window, double xPos, double yPos )
+{
+    if ( firstMouse )
+    {
+        lastX = xPos;
+        lastY = yPos;
+        firstMouse = false;
+    }
+    
+    GLfloat xOffset = xPos - lastX;
+    GLfloat yOffset = lastY - yPos;  // Reversed since y-coordinates go from bottom to left
+    
+    lastX = xPos;   
+    lastY = yPos;
+    
+    camera.ProcessMouseMovement( xOffset, yOffset );
+}
+

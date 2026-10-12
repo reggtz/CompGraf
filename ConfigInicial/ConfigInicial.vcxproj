@@ -21,6 +21,8 @@
   <ItemGroup>
     <None Include="Shader\core.frag" />
     <None Include="Shader\core.vs" />
+    <None Include="Shader\escenarioDiaNoche.frag" />
+    <None Include="Shader\escenarioDiaNoche.vs" />
     <None Include="Shader\lamp.frag" />
     <None Include="Shader\lamp.vs" />
     <None Include="Shader\lighting.frag" />
@@ -32,7 +34,7 @@
     <ClInclude Include="Camera.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Iluminacion.cpp" />
+    <ClCompile Include="fuentesDeLuz.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

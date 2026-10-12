@@ -1,7 +1,7 @@
 // Gutierrez Benavides Frida Regina
 // 320233454
-// Previo 8
-// Sabado 3 de octubre de 2026
+// Practica 8
+// Lunes 5 de octubre de 2026
 
 // Std. Includes
 #include <string>
