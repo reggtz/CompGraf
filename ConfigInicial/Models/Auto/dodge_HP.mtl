@@ -1,0 +1,14 @@
+# Blender 4.4.1 MTL File: 'dodge.blend'
+# www.blender.org
+
+newmtl texture_pbr_v1.001
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd Textures_HP/bake_HP_albedo.png
+map_Ns Textures_HP/bake_HP_roughness.png
+map_refl Textures_HP/bake_HP_metalness.png
+map_Bump Textures_HP/bake_HP_normal.png

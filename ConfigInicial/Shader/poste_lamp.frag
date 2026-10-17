@@ -1,7 +1,7 @@
 #version 330 core
 out vec4 FragColor;
+uniform vec3 colorLuz;
 void main()
 {
-    // Color constante, como el cubo blanco de la practica.
-    FragColor = vec4(1.0, 0.45, 0.08, 1.0);
+    FragColor = vec4(colorLuz, 1.0);
 }

@@ -1,8 +1,7 @@
-// Controles: L sol, P poste izquierdo, O poste derecho.
-// Usa los shaders y modelos del paquete Paso2_Sol_Poste.
+
 // Gutierrez Benavides Frida Regina
 // 320233454
-// Fuentes de luz: paso 3, sol y dos postes puntuales
+// Cinco fuentes: un sol direccional, tres puntuales y un reflector conico.
 // Copia independiente del escenario original
 
 // Std. Includes
@@ -41,23 +40,23 @@ void DoMovement();
 
 
 // Camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+// Vista inicial mas amplia para incluir los cinco elementos.
+Camera camera(glm::vec3(-4.0f, 4.2f, 20.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -6.0f);
 bool keys[1024] = {};
 bool solEncendido = true;
 bool posteIzquierdoEncendido = true;
 bool posteDerechoEncendido = true;
+bool cofreEncendido = true;
+bool faroEncendido = true;
 GLfloat lastX = 400, lastY = 300;
 bool firstMouse = true;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
-void DibujarModelo(
-    Model& objeto,
-    Shader& shader,
-    glm::vec3 posicion,
-    glm::vec3 rotacion,
-    glm::vec3 escala)
+glm::mat4 MatrizModelo(
+    glm::vec3 posicion, glm::vec3 rotacion, glm::vec3 escala,
+    glm::vec3 origen = glm::vec3(0.0f))
 {
     glm::mat4 model(1.0f);
 
@@ -76,7 +75,17 @@ void DibujarModelo(
         glm::vec3(1.0f, 0.0f, 0.0f));
 
     model = glm::scale(model, escala);
+    // Centrar el modelo y colocar su base en Y=0 antes de escalarlo.
+    model = glm::translate(model, -origen);
+    return model;
+}
 
+void DibujarModelo(
+    Model& objeto, Shader& shader,
+    glm::vec3 posicion, glm::vec3 rotacion, glm::vec3 escala,
+    glm::vec3 origen = glm::vec3(0.0f))
+{
+    glm::mat4 model = MatrizModelo(posicion, rotacion, escala, origen);
     glUniformMatrix4fv(
         glGetUniformLocation(shader.Program, "model"),
         1, GL_FALSE, glm::value_ptr(model));
@@ -159,6 +168,8 @@ int main()
     Model montana((char*)"Models/Montaña/Mountain.obj");
     Model patineta((char*)"Models/Patineta/skateboard_by_dommk.obj");
     Model perro((char*)"Models/Perro/12228_Dog_v1_L2.obj");
+    Model cofre((char*)"Models/Cofre/treasure_chest_obj.obj");
+    Model autoModelo((char*)"Models/Auto/dodge_HP.obj");
 
     // VALORES PARA MODIFICAR
     // Posicion: X = izquierda/derecha
@@ -167,7 +178,8 @@ int main()
 
     glm::vec3 posicionCalle(0.0f, -0.12f, 0.0f);
     glm::vec3 rotacionCalle(0.0f, 90.0f, 0.0f);
-    glm::vec3 escalaCalle(1.0f);
+    // Ampliar la superficie para apoyar el auto completo y cubrir el nuevo encuadre.
+    glm::vec3 escalaCalle(3.0f, 1.0f, 2.0f);
 
     glm::vec3 posicionMontana(0.0f, 0.0f, -20.0f);
     glm::vec3 rotacionMontana(0.0f);
@@ -213,6 +225,30 @@ int main()
     // Los rayos viajan desde el sol hacia el centro de la escena.
     glm::vec3 direccionSol = glm::normalize(glm::vec3(0.0f) - posicionSol);
 
+    // Cuarta fuente: cofre sobre la ladera delantera de la montana.
+    // Altura e inclinacion aproximadas de la ladera en X=-7, Z=-14.
+    glm::vec3 posicionCofre(-7.0f, 5.75f, -14.0f);
+    glm::vec3 rotacionCofre(18.7f, 0.0f, 34.4f);
+    glm::vec3 escalaCofre(0.20f);
+    glm::vec3 origenCofre(0.0049875f, 0.035405f, -0.0069915f);
+    glm::mat4 matrizCofre = MatrizModelo(posicionCofre, rotacionCofre, escalaCofre, origenCofre);
+    // Punto de luz en la parte frontal del cofre, separado de su superficie.
+    glm::vec3 focoCofre = glm::vec3(matrizCofre * glm::vec4(0.0f, 3.0f, 4.9f, 1.0f));
+
+    // Quinta fuente: un reflector que representa el haz frontal del auto.
+    // Origen en el centro de la base; largo 10.05, ancho 4.71 y alto 3.50 unidades.
+    glm::vec3 posicionAuto(-7.8f, 0.03f, 0.0f);
+    // El frente local +Z gira hacia +X: el auto queda frente al hocico del perro.
+    glm::vec3 rotacionAuto(0.0f, 90.0f, 0.0f);
+    glm::vec3 escalaAuto(9.0f);
+    glm::vec3 origenAuto(-0.000049f, -0.194373f, 0.000466f);
+    glm::mat4 matrizAuto = MatrizModelo(posicionAuto, rotacionAuto, escalaAuto, origenAuto);
+    glm::vec3 focoAuto = glm::vec3(matrizAuto * glm::vec4(0.0f, -0.035f, 0.56f, 1.0f));
+    // W=0 transforma una direccion sin aplicarle la traslacion.
+    glm::vec3 direccionAuto = glm::normalize(glm::vec3(matrizAuto * glm::vec4(0.0f, -0.45f, 1.0f, 0.0f)));
+
+    std::cout << "Luces: L sol, P poste izquierdo, O poste derecho, C cofre, F faro." << std::endl;
+
     // Game loop
     while (!glfwWindowShouldClose(window))
     {
@@ -229,6 +265,7 @@ int main()
 
         shader.Use();
         glUniform1i(glGetUniformLocation(shader.Program, "sinIluminacion"), 0);
+        glUniform3f(glGetUniformLocation(shader.Program, "emision"), 0.0f, 0.0f, 0.0f);
         glUniform1i(glGetUniformLocation(shader.Program, "usarColorPlano"), 0);
         glUniform1i(glGetUniformLocation(shader.Program, "esCristal"), 0);
         glUniform1i(glGetUniformLocation(shader.Program, "transparency"), 0);
@@ -249,7 +286,7 @@ int main()
         glUniform3f(glGetUniformLocation(shader.Program, "dirLight.specular"),
             0.30f * intensidad, 0.18f * intensidad, 0.08f * intensidad);
 
-        // Inicializar las luces puntuales; despues se activa la numero 0.
+        // Inicializar las cuatro posiciones; se usan 0 y 1 para postes, 2 para el cofre.
         // constant = 1 evita dividir entre cero al calcular atenuacion.
         for (int i = 0; i < 4; ++i)
         {
@@ -282,14 +319,25 @@ int main()
             glUniform1f(glGetUniformLocation(shader.Program, (nombre + "quadratic").c_str()), 0.032f);
         }
 
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.position"), 0.0f, 100.0f, 0.0f);
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.direction"), 0.0f, -1.0f, 0.0f);
+        // Luz puntual amarilla del cofre: ilumina tambien la montana.
+        float intensidadCofre = cofreEncendido ? 1.0f : 0.0f;
+        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].position"), focoCofre.x, focoCofre.y, focoCofre.z);
+        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].ambient"), 0.08f * intensidadCofre, 0.05f * intensidadCofre, 0.0f);
+        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].diffuse"), 2.5f * intensidadCofre, 1.8f * intensidadCofre, 0.08f * intensidadCofre);
+        glUniform3f(glGetUniformLocation(shader.Program, "pointLights[2].specular"), 1.0f * intensidadCofre, 0.8f * intensidadCofre, 0.1f * intensidadCofre);
+        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[2].linear"), 0.14f);
+        glUniform1f(glGetUniformLocation(shader.Program, "pointLights[2].quadratic"), 0.07f);
+
+        // Reflector fijo al auto, independiente de la camara.
+        float intensidadFaro = faroEncendido ? 1.0f : 0.0f;
+        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.position"), focoAuto.x, focoAuto.y, focoAuto.z);
+        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.direction"), direccionAuto.x, direccionAuto.y, direccionAuto.z);
         glUniform3f(glGetUniformLocation(shader.Program, "spotLight.ambient"), 0.0f, 0.0f, 0.0f);
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.diffuse"), 0.0f, 0.0f, 0.0f);
-        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.specular"), 0.0f, 0.0f, 0.0f);
+        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.diffuse"), 2.4f * intensidadFaro, 2.3f * intensidadFaro, 1.9f * intensidadFaro);
+        glUniform3f(glGetUniformLocation(shader.Program, "spotLight.specular"), 1.0f * intensidadFaro, 0.95f * intensidadFaro, 0.8f * intensidadFaro);
         glUniform1f(glGetUniformLocation(shader.Program, "spotLight.constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.linear"), 0.0f);
-        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.quadratic"), 0.0f);
+        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(shader.Program, "spotLight.quadratic"), 0.032f);
         glUniform1f(glGetUniformLocation(shader.Program, "spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
         glUniform1f(glGetUniformLocation(shader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(17.5f)));
 
@@ -319,6 +367,15 @@ int main()
             perro, shader,
             posicionPerro, rotacionPerro, escalaPerro);
 
+
+        // Auto con su textura original. Cofre dorado sin textura externa.
+        DibujarModelo(autoModelo, shader, posicionAuto, rotacionAuto, escalaAuto, origenAuto);
+        glUniform1i(glGetUniformLocation(shader.Program, "usarColorPlano"), 1);
+        glUniform3f(glGetUniformLocation(shader.Program, "colorPlano"), 0.65f, 0.38f, 0.06f);
+        glUniform3f(glGetUniformLocation(shader.Program, "emision"),
+            0.28f * intensidadCofre, 0.18f * intensidadCofre, 0.01f * intensidadCofre);
+        DibujarModelo(cofre, shader, posicionCofre, rotacionCofre, escalaCofre, origenCofre);
+        glUniform3f(glGetUniformLocation(shader.Program, "emision"), 0.0f, 0.0f, 0.0f);
 
         // Poste sin textura: un color gris iluminado por las mismas fuentes.
         glUniform1i(glGetUniformLocation(shader.Program, "usarColorPlano"), 1);
@@ -362,7 +419,22 @@ int main()
             1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(solShader.Program, "view"),
             1, GL_FALSE, glm::value_ptr(view));
+        glUniform3f(glGetUniformLocation(solShader.Program, "colorLuz"),
+            solEncendido ? 1.0f : 0.15f, solEncendido ? 0.45f : 0.07f, 0.08f);
         DibujarModelo(sol, solShader, posicionSol, glm::vec3(0.0f), escalaSol);
+
+        // Indicadores visibles: el color constante no sustituye a la luz real.
+        glUniform3f(glGetUniformLocation(solShader.Program, "colorLuz"),
+            cofreEncendido ? 1.0f : 0.12f, cofreEncendido ? 0.85f : 0.08f, 0.02f);
+        DibujarModelo(sol, solShader, focoCofre, glm::vec3(0.0f), glm::vec3(0.10f));
+        glUniform3f(glGetUniformLocation(solShader.Program, "colorLuz"),
+            faroEncendido ? 1.0f : 0.12f, faroEncendido ? 0.96f : 0.12f, faroEncendido ? 0.8f : 0.10f);
+        // Dos focos visibles, un solo reflector: cinco fuentes en total.
+        for (int lado = -1; lado <= 1; lado += 2)
+        {
+            glm::vec3 faroVisible = glm::vec3(matrizAuto * glm::vec4(0.17f * lado, -0.035f, 0.56f, 1.0f));
+            DibujarModelo(sol, solShader, faroVisible, glm::vec3(0.0f), glm::vec3(0.09f));
+        }
 
         glfwSwapBuffers(window);
     }
@@ -415,6 +487,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
         posteDerechoEncendido = !posteDerechoEncendido;
+
+    if (key == GLFW_KEY_C && action == GLFW_PRESS)
+        cofreEncendido = !cofreEncendido;
+
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+        faroEncendido = !faroEncendido;
 
     if (key >= 0 && key < 1024)
     {

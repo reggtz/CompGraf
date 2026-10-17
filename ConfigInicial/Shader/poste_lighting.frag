@@ -65,6 +65,7 @@ uniform sampler2D texture_diffuse1;
 uniform bool sinIluminacion;
 uniform bool usarColorPlano;
 uniform vec3 colorPlano;
+uniform vec3 emision;
 
 // Function prototypes
 vec3 CalcDirLight( DirLight light, vec3 normal, vec3 viewDir );
@@ -107,7 +108,7 @@ void main( )
     if (transparency == 1 && alphaTextura < 0.1)
         discard;
 
-    color = vec4(result, alphaTextura * opacity);
+    color = vec4(result + emision, alphaTextura * opacity);
 }
 
 // Calculates the color when using a directional light.
