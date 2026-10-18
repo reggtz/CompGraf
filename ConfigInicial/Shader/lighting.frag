@@ -1,6 +1,6 @@
 #version 330 core
 
-#define NUMBER_OF_POINT_LIGHTS 4
+#define NUMBER_OF_POINT_LIGHTS 1
 
 struct Material
 {
@@ -59,8 +59,6 @@ uniform PointLight pointLights[NUMBER_OF_POINT_LIGHTS];
 uniform SpotLight spotLight;
 uniform Material material;
 uniform int transparency;
-uniform float opacity;
-uniform bool esCristal;
 
 // Function prototypes
 vec3 CalcDirLight( DirLight light, vec3 normal, vec3 viewDir );
@@ -85,18 +83,10 @@ void main( )
     // Spot light
     result += CalcSpotLight( spotLight, norm, FragPos, viewDir );
  	
-    //color = vec4( result,texture(material.diffuse, TexCoords).rgb );
-	//  if(color.a < 0.1 && transparency==1)
-    //    discard;
-
-    float alphaTextura = esCristal
-        ? 1.0
-        : texture(material.diffuse, TexCoords).a;
-
-    if (transparency == 1 && alphaTextura < 0.1)
+    color = vec4( result,texture(material.diffuse, TexCoords).rgb );
+	  if(color.a < 0.1 && transparency==1)
         discard;
 
-    color = vec4(result, alphaTextura * opacity);
 }
 
 // Calculates the color when using a directional light.
@@ -112,23 +102,10 @@ vec3 CalcDirLight( DirLight light, vec3 normal, vec3 viewDir )
     float spec = pow( max( dot( viewDir, reflectDir ), 0.0 ), material.shininess );
     
     // Combine results
-    //vec3 ambient = light.ambient * vec3( texture( material.diffuse, TexCoords ) );
-    //vec3 diffuse = light.diffuse * diff * vec3( texture( material.diffuse, TexCoords ) );
-    //vec3 specular = light.specular * spec * vec3( texture( material.specular, TexCoords ) );
+    vec3 ambient = light.ambient * vec3( texture( material.diffuse, TexCoords ) );
+    vec3 diffuse = light.diffuse * diff * vec3( texture( material.diffuse, TexCoords ) );
+    vec3 specular = light.specular * spec * vec3( texture( material.specular, TexCoords ) );
     
-    // Para el cristal usamos un tono claro y reflejos blancos.
-    vec3 base = esCristal
-        ? vec3(0.85, 0.95, 1.0)
-        : texture(material.diffuse, TexCoords).rgb;
-
-    vec3 brillo = esCristal
-        ? vec3(1.0)
-        : texture(material.specular, TexCoords).rgb;
-
-    vec3 ambient = light.ambient * base;
-    vec3 diffuse = light.diffuse * diff * base;
-    vec3 specular = light.specular * spec * brillo;
-
     return ( ambient + diffuse + specular );
 }
 
@@ -149,23 +126,10 @@ vec3 CalcPointLight( PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir )
     float attenuation = 1.0f / ( light.constant + light.linear * distance + light.quadratic * ( distance * distance ) );
     
     // Combine results
-    //vec3 ambient = light.ambient * vec3( texture( material.diffuse, TexCoords ) );
-    //vec3 diffuse = light.diffuse * diff * vec3( texture( material.diffuse, TexCoords ) );
-    //vec3 specular = light.specular * spec * vec3( texture( material.specular, TexCoords ) );
+    vec3 ambient = light.ambient * vec3( texture( material.diffuse, TexCoords ) );
+    vec3 diffuse = light.diffuse * diff * vec3( texture( material.diffuse, TexCoords ) );
+    vec3 specular = light.specular * spec * vec3( texture( material.specular, TexCoords ) );
     
-    // Para el cristal usamos un tono claro y reflejos blancos.
-    vec3 base = esCristal
-        ? vec3(0.85, 0.95, 1.0)
-        : texture(material.diffuse, TexCoords).rgb;
-
-    vec3 brillo = esCristal
-        ? vec3(1.0)
-        : texture(material.specular, TexCoords).rgb;
-
-    vec3 ambient = light.ambient * base;
-    vec3 diffuse = light.diffuse * diff * base;
-    vec3 specular = light.specular * spec * brillo;
-
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
@@ -195,23 +159,10 @@ vec3 CalcSpotLight( SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir )
     float intensity = clamp( ( theta - light.outerCutOff ) / epsilon, 0.0, 1.0 );
     
     // Combine results
-    //vec3 ambient = light.ambient * vec3( texture( material.diffuse, TexCoords ) );
-    //vec3 diffuse = light.diffuse * diff * vec3( texture( material.diffuse, TexCoords ) );
-    //vec3 specular = light.specular * spec * vec3( texture( material.specular, TexCoords ) );
+    vec3 ambient = light.ambient * vec3( texture( material.diffuse, TexCoords ) );
+    vec3 diffuse = light.diffuse * diff * vec3( texture( material.diffuse, TexCoords ) );
+    vec3 specular = light.specular * spec * vec3( texture( material.specular, TexCoords ) );
     
-    // Para el cristal usamos un tono claro y reflejos blancos.
-    vec3 base = esCristal
-        ? vec3(0.85, 0.95, 1.0)
-        : texture(material.diffuse, TexCoords).rgb;
-
-    vec3 brillo = esCristal
-        ? vec3(1.0)
-        : texture(material.specular, TexCoords).rgb;
-
-vec3 ambient = light.ambient * base;
-vec3 diffuse = light.diffuse * diff * base;
-vec3 specular = light.specular * spec * brillo;
-
     ambient *= attenuation * intensity;
     diffuse *= attenuation * intensity;
     specular *= attenuation * intensity;
