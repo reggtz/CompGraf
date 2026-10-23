@@ -1,10 +1,14 @@
-// Gutierrez Benavides Frida Regina
+// Gutiérrez Benavides Frida Regina
 // 320233454
-// Previo 10
-// Domingo 18 de octubre de 2026
+// Practica 10
+// Viernes 23 de octubre de 2026
 
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <locale>
 
 // GLEW
 #include <GL/glew.h>
@@ -40,7 +44,7 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 // Camera
-Camera  camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera  camera(glm::vec3(0.0f, 0.80f, 4.2f));
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
 bool keys[1024];
@@ -51,7 +55,7 @@ bool active;
 
 // Positions of the point lights
 glm::vec3 pointLightPositions[] = {
-	glm::vec3(0.0f, 2.0f, 0.47f), // Luz alineada sobre la pelota
+	glm::vec3(0.0f, 2.0f, 0.0f),
 	glm::vec3(0.0f,0.0f, 0.0f),
 	glm::vec3(0.0f,0.0f,  0.0f),
 	glm::vec3(0.0f,0.0f, 0.0f)
@@ -104,16 +108,196 @@ float vertices[] = {
 
 
 glm::vec3 Light1 = glm::vec3(0);
-//Anim
-float desplazamientoY = 0.0f;
-float velocidad = 0.8f; // Unidades por segundo
-bool subiendo = true;
-bool AnimBall = false;
-
+// Perro rigido persiguiendo un globo. Mismos OBJ y shaders.
+bool AnimBall = true;
+double tiempoAnim = 0.0;
+glm::vec3 posPerro(0.0f), posPelota(0.0f);
+glm::vec3 centroPerro(0.0f), centroPelota(0.0f, 0.31f, 0.47f);
+float giroPerro = 90.0f;
+float inclinacionPerro = 0.0f;
+float balanceoPerro = 0.0f;
+glm::vec3 pivoteInclinacion(0.0f, 0.25f, 0.0f);
+glm::vec3 limiteMinPerro(-0.2f, 0.0f, -0.3f);
+glm::vec3 limiteMaxPerro(0.2f, 0.6f, 0.3f);
+float giroPelota = 0.0f;
+float radioGlobo = 0.15f;
+float alturaNariz = 0.31f;
+float avanceNariz = 0.30f;
+float radioRecorridoGlobo = 1.1f;
+float desfaseNariz = 0.0f;
 
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
+
+// PARAMETROS PARA AJUSTAR LA ANIMACION.
+const double DURACION_CICLO = 10.0;
+const float PI_ANIM = 3.14159265359f;
+const float RADIO_PERRO = 1.05f;
+const float ALTURA_SALTO = 0.34f;
+const float DURACION_SALTO = 1.20f;
+const float OSCILACION_GLOBO = 0.50f; // Diferencia entre altura maxima y minima.
+const float RETRASO_PERRO = 0.38f; // Radianes. Mantener entre 0 y 1.
+// Correcciones opcionales de la nariz, en coordenadas del modelo original.
+const float AJUSTE_NARIZ_Y = 0.0f;
+const float AJUSTE_NARIZ_Z = 0.0f;
+
+// Salto de TODO el perro. Parabola: despega, llega al maximo y aterriza.
+float SaltoParabolico(float t, float instanteMaximo)
+{
+	float u = (t - instanteMaximo) / (DURACION_SALTO * 0.5f);
+	if (u <= -1.0f || u >= 1.0f) return 0.0f;
+	return ALTURA_SALTO * (1.0f - u * u);
+}
+
+// Trayectoria propia del globo: circulo en XZ y oscilacion vertical.
+glm::vec3 RecorridoGlobo(float t)
+{
+	float a = 2.0f * PI_ANIM * t / static_cast<float>(DURACION_CICLO);
+	float c = std::cos(a);
+	float alturaMinima = alturaNariz + AJUSTE_NARIZ_Y + ALTURA_SALTO + radioGlobo;
+	float y = alturaMinima + OSCILACION_GLOBO * c * c;
+	return glm::vec3(radioRecorridoGlobo * std::cos(a), y,
+		radioRecorridoGlobo * std::sin(a));
+}
+
+// Trayectoria propia del perro. No usa la posicion calculada del globo.
+glm::vec3 RecorridoPerro(float t, float& anguloGrados)
+{
+	float a = 2.0f * PI_ANIM * t / static_cast<float>(DURACION_CICLO);
+	float c = std::cos(a);
+	// Recupera la distancia al acercarse cada punto bajo del globo.
+	float retraso = RETRASO_PERRO * c * c;
+	float fase = a - desfaseNariz - retraso;
+	anguloGrados = -fase * 180.0f / PI_ANIM;
+	float salto1 = SaltoParabolico(t, static_cast<float>(DURACION_CICLO * 0.25));
+	float salto2 = SaltoParabolico(t, static_cast<float>(DURACION_CICLO * 0.75));
+	return glm::vec3(RADIO_PERRO * std::cos(fase), salto1 + salto2,
+		RADIO_PERRO * std::sin(fase));
+}
+
+// Movimiento alegre: rotaciones de TODO el perro, sin deformarlo.
+const float BALANCEO_GRADOS = 4.0f;
+const float INCLINACION_SALTO_GRADOS = 10.0f;
+const float INCLINACION_CAMINAR_GRADOS = 2.0f;
+
+// Misma rotacion local que se aplica al dibujar: primero Z y despues X.
+glm::vec3 RotarInclinacion(glm::vec3 p)
+{
+	float x = inclinacionPerro * PI_ANIM / 180.0f;
+	float z = balanceoPerro * PI_ANIM / 180.0f;
+	p.x -= pivoteInclinacion.x;
+	p.y -= pivoteInclinacion.y;
+	p.z -= pivoteInclinacion.z;
+	float px = std::cos(z) * p.x - std::sin(z) * p.y;
+	float py = std::sin(z) * p.x + std::cos(z) * p.y;
+	return glm::vec3(px + pivoteInclinacion.x,
+		std::cos(x) * py - std::sin(x) * p.z + pivoteInclinacion.y,
+		std::sin(x) * py + std::cos(x) * p.z + pivoteInclinacion.z);
+}
+
+void ActualizarInclinacion(float t)
+{
+	float a = 2.0f * PI_ANIM * t / static_cast<float>(DURACION_CICLO);
+	float fraccionSalto = ALTURA_SALTO > 0.0f ? posPerro.y / ALTURA_SALTO : 0.0f;
+	balanceoPerro = BALANCEO_GRADOS * std::sin(8.0f * a) * (1.0f - 0.7f * fraccionSalto);
+	inclinacionPerro = -INCLINACION_CAMINAR_GRADOS * std::sin(8.0f * a)
+		* (1.0f - fraccionSalto);
+	const float maximos[] = { static_cast<float>(DURACION_CICLO * 0.25),
+							 static_cast<float>(DURACION_CICLO * 0.75) };
+	for (int i = 0; i < 2; ++i)
+	{
+		float u = (t - maximos[i]) / (DURACION_SALTO * 0.5f);
+		if (u > -1.0f && u < 1.0f)
+			// Nariz hacia arriba al subir y hacia abajo al aterrizar.
+			// En el punto de contacto vuelve a estar horizontal.
+			inclinacionPerro += INCLINACION_SALTO_GRADOS * std::sin(PI_ANIM * u) * u * u;
+	}
+
+	// Compensacion conservadora del piso usando las ocho esquinas del modelo.
+	// Evita que el balanceo hunda las patas. En pleno salto no suele hacer falta.
+	float minimoY = 1.0e20f;
+	for (int i = 0; i < 8; ++i)
+	{
+		glm::vec3 p((i & 1) ? limiteMaxPerro.x : limiteMinPerro.x,
+			(i & 2) ? limiteMaxPerro.y : limiteMinPerro.y,
+			(i & 4) ? limiteMaxPerro.z : limiteMinPerro.z);
+		float y = RotarInclinacion(p).y;
+		if (y < minimoY) minimoY = y;
+	}
+	if (posPerro.y + minimoY < 0.0f)
+		posPerro.y = -minimoY;
+}
+
+void Animation()
+{
+	if (AnimBall)
+		tiempoAnim = std::fmod(tiempoAnim + deltaTime, DURACION_CICLO);
+	float t = static_cast<float>(tiempoAnim);
+	posPelota = RecorridoGlobo(t); // Se conserva ball.obj como esfera flotante.
+	posPerro = RecorridoPerro(t, giroPerro);
+	ActualizarInclinacion(t);
+	// Una vuelta suave del globo por ciclo, alrededor de su propio centro.
+	giroPelota = 360.0f * t / static_cast<float>(DURACION_CICLO);
+}
+
+
+// Consulta las dimensiones sin editar ningun OBJ.
+struct LimitesOBJ { float minX, minY, minZ, maxX, maxY, maxZ; };
+bool LeerLimites(const char* ruta, LimitesOBJ& b)
+{
+	std::ifstream archivo(ruta);
+	if (!archivo) return false;
+	b = { 1e20f, 1e20f, 1e20f, -1e20f, -1e20f, -1e20f };
+	std::string linea, tipo;
+	bool encontrado = false;
+	while (std::getline(archivo, linea))
+	{
+		std::istringstream datos(linea);
+		datos.imbue(std::locale::classic());
+		float x, y, z;
+		if ((datos >> tipo) && tipo == "v" && (datos >> x >> y >> z))
+		{
+			if (x < b.minX) b.minX = x;
+			if (y < b.minY) b.minY = y;
+			if (z < b.minZ) b.minZ = z;
+			if (x > b.maxX) b.maxX = x;
+			if (y > b.maxY) b.maxY = y;
+			if (z > b.maxZ) b.maxZ = z;
+			encontrado = true;
+		}
+	}
+	return encontrado;
+}
+
+// Estima la nariz en el extremo delantero (+Z) del modelo.
+// Solo consulta vertices del archivo; no modifica la geometria.
+bool EstimarNariz(const char* ruta, const LimitesOBJ& b, glm::vec3& nariz)
+{
+	std::ifstream archivo(ruta);
+	if (!archivo) return false;
+	std::string linea, tipo;
+	float sumaX = 0.0f, sumaY = 0.0f, sumaZ = 0.0f;
+	int cantidad = 0;
+	float margen = (b.maxZ - b.minZ) * 0.002f;
+	while (std::getline(archivo, linea))
+	{
+		std::istringstream datos(linea);
+		datos.imbue(std::locale::classic());
+		float x, y, z;
+		if ((datos >> tipo) && tipo == "v" && (datos >> x >> y >> z)
+			&& z >= b.maxZ - margen)
+		{
+			sumaX += x;
+			sumaY += y;
+			sumaZ += z;
+			++cantidad;
+		}
+	}
+	if (!cantidad) return false;
+	nariz = glm::vec3(sumaX / cantidad, sumaY / cantidad, sumaZ / cantidad);
+	return true;
+}
 
 int main()
 {
@@ -127,7 +311,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);*/
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Animacion basica Gutierrez Benavides Frida Regina", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Perro alegre y globo - saltos y balanceo Gutiérrez Benavides Frida Regina", nullptr, nullptr);
 
 	if (nullptr == window)
 	{
@@ -170,6 +354,47 @@ int main()
 	Model Piso((char*)"Models/piso.obj");
 	Model Ball((char*)"Models/ball.obj");
 
+	// RedDog mira hacia +Z en su orientacion original.
+	// Estos centros evitan que los modelos orbiten al girarlos.
+	LimitesOBJ perro, pelota;
+	if (!LeerLimites("Models/RedDog.obj", perro) ||
+		!LeerLimites("Models/ball.obj", pelota))
+	{
+		std::cerr << "No se pudieron leer los OBJ. Revisa la carpeta Models." << std::endl;
+		glfwTerminate();
+		return EXIT_FAILURE;
+	}
+	glm::vec3 nariz;
+	if (!EstimarNariz("Models/RedDog.obj", perro, nariz))
+	{
+		std::cerr << "No se pudo estimar el punto de la nariz." << std::endl;
+		glfwTerminate();
+		return EXIT_FAILURE;
+	}
+	// La referencia del perro queda en el piso, debajo de su eje delantero.
+	centroPerro = glm::vec3(nariz.x, perro.minY,
+		(perro.minZ + perro.maxZ) * 0.5f);
+	centroPelota = glm::vec3((pelota.minX + pelota.maxX) * 0.5f,
+		(pelota.minY + pelota.maxY) * 0.5f,
+		(pelota.minZ + pelota.maxZ) * 0.5f);
+	radioGlobo = (pelota.maxY - pelota.minY) * 0.5f;
+	alturaNariz = nariz.y - centroPerro.y;
+	avanceNariz = nariz.z - centroPerro.z + AJUSTE_NARIZ_Z;
+	limiteMinPerro = glm::vec3(perro.minX - centroPerro.x, 0.0f,
+		perro.minZ - centroPerro.z);
+	limiteMaxPerro = glm::vec3(perro.maxX - centroPerro.x,
+		perro.maxY - perro.minY, perro.maxZ - centroPerro.z);
+	pivoteInclinacion = glm::vec3(0.0f, (perro.maxY - perro.minY) * 0.45f, 0.0f);
+	// La nariz describe un circulo algo mayor que el centro del cuerpo.
+	// En los dos puntos bajos, ese circulo coincide con el del globo.
+	radioRecorridoGlobo = std::sqrt(RADIO_PERRO * RADIO_PERRO + avanceNariz * avanceNariz);
+	desfaseNariz = std::atan2(avanceNariz, RADIO_PERRO);
+
+	// Evalua la pose inicial sin avanzar el reloj.
+	deltaTime = 0.0f;
+	Animation();
+
+
 
 
 	// First, set the container's VAO (and VBO)
@@ -192,6 +417,9 @@ int main()
 	glUniform1i(glGetUniformLocation(lightingShader.Program, "Material.specular"), 1);
 
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 100.0f);
+
+	// La carga inicial no forma parte de los 10 segundos.
+	lastFrame = static_cast<GLfloat>(glfwGetTime());
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -286,26 +514,34 @@ int main()
 
 
 
-		//Carga de modelo 
-		view = camera.GetViewMatrix();
-		model = glm::mat4(1);
+		// PISO: espacio para el circuito completo.
+		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(2.5f, 1.0f, 2.5f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Piso.Draw(lightingShader);
 
-		model = glm::mat4(1);
+		// PERRO RIGIDO: solo traslacion y rotacion de TODO el modelo.
+		model = glm::translate(glm::mat4(1.0f), posPerro);
+		model = glm::rotate(model, glm::radians(giroPerro), glm::vec3(0, 1, 0));
+		model = glm::translate(model, pivoteInclinacion);
+		model = glm::rotate(model, glm::radians(inclinacionPerro), glm::vec3(1, 0, 0));
+		model = glm::rotate(model, glm::radians(balanceoPerro), glm::vec3(0, 0, 1));
+		model = glm::translate(model, -pivoteInclinacion);
+		model = glm::translate(model, -centroPerro);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
 		Dog.Draw(lightingShader);
 
-		model = glm::mat4(1);
-		glEnable(GL_BLEND);//Avtiva la funcionalidad para trabajar el canal alfa
+		// GLOBO: oscilacion vertical y circulo independientes del perro.
+		model = glm::translate(glm::mat4(1.0f), posPelota);
+		model = glm::rotate(model, glm::radians(giroPelota), glm::vec3(0, 1, 0));
+		model = glm::translate(model, -centroPelota);
+		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
-		model = glm::translate(model, glm::vec3(0.0f, desplazamientoY, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Ball.Draw(lightingShader);
-		glDisable(GL_BLEND);  //Desactiva el canal alfa 
+		glDisable(GL_BLEND);
+		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
 		glBindVertexArray(0);
 
 
@@ -430,7 +666,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 		}
 	}
 
-	if (keys[GLFW_KEY_SPACE])
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
 	{
 		active = !active;
 		if (active)
@@ -443,41 +679,17 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 			Light1 = glm::vec3(0);//Cuado es solo un valor en los 3 vectores pueden dejar solo una componente
 		}
 	}
+	if (key == GLFW_KEY_R && action == GLFW_PRESS)
+	{
+		tiempoAnim = 0.0;
+		deltaTime = 0.0f;
+		AnimBall = true;
+		Animation();
+	}
 	if (key == GLFW_KEY_N && action == GLFW_PRESS)
 	{
 		AnimBall = !AnimBall;
 
-	}
-}
-void Animation()
-{
-	if (!AnimBall)
-		return;
-
-	const float minimo = 0.0f;
-	// El centro original de ball.obj esta en Y = 0.31.
-	const float maximo = pointLightPositions[0].y - 0.31f;
-
-	if (maximo <= minimo)
-		return;
-
-	if (subiendo)
-	{
-		desplazamientoY += velocidad * deltaTime;
-		if (desplazamientoY >= maximo)
-		{
-			desplazamientoY = maximo;
-			subiendo = false;
-		}
-	}
-	else
-	{
-		desplazamientoY -= velocidad * deltaTime;
-		if (desplazamientoY <= minimo)
-		{
-			desplazamientoY = minimo;
-			subiendo = true;
-		}
 	}
 }
 void MouseCallback(GLFWwindow* window, double xPos, double yPos)
