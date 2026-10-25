@@ -21,28 +21,18 @@
   <ItemGroup>
     <None Include="Shader\core.frag" />
     <None Include="Shader\core.vs" />
-    <None Include="Shader\escenarioDiaNoche.frag" />
-    <None Include="Shader\escenarioDiaNoche.vs" />
     <None Include="Shader\lamp.frag" />
     <None Include="Shader\lamp.vs" />
     <None Include="Shader\lighting.frag" />
     <None Include="Shader\lighting.vs" />
     <None Include="Shader\modelLoading.frag" />
     <None Include="Shader\modelLoading.vs" />
-    <None Include="Shader\poste_lamp.frag" />
-    <None Include="Shader\poste_lamp.vs" />
-    <None Include="Shader\poste_lighting.frag" />
-    <None Include="Shader\poste_lighting.vs" />
-    <None Include="Shader\sol_lamp.frag" />
-    <None Include="Shader\sol_lamp.vs" />
-    <None Include="Shader\sol_lighting.frag" />
-    <None Include="Shader\sol_lighting.vs" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Animación_Básica.cpp" />
+    <ClCompile Include="Maquina de estados.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
